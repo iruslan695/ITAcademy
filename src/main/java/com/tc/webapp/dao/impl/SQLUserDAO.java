@@ -5,12 +5,13 @@ import com.tc.webapp.dao.connection.ConnectionPool;
 import com.tc.webapp.dao.connection.ConnectionPoolException;
 import com.tc.webapp.dao.DAOException;
 import com.tc.webapp.dao.UserDAO;
-import com.tc.webapp.entity.Person;
-import com.tc.webapp.entity.SQLCharacteristic;
-import com.tc.webapp.entity.User;
+import com.tc.webapp.entity.bean.Person;
+import com.tc.webapp.entity.constant.SQLCharacteristic;
+import com.tc.webapp.entity.bean.User;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public class SQLUserDAO implements UserDAO {
     private static final String AUTHORISATION_QUERY = "SELECT id,name,surname,age,male,login,balance,roles_id" +
@@ -24,13 +25,19 @@ public class SQLUserDAO implements UserDAO {
     private static final String GET_USER_ID = "SELECT id FROM subscribtion.user WHERE login=?";
     private static final String GET_ROLE_ID = "SELECT id FROM subscribtion.roles WHERE role_name=?";
     private static final String SET_USER_INTERESTS = "INSERT INTO subscribtion.interest (subjects_id,user_id) VALUES (?,?)";
-    private static final String SET_PUBLISHER = "INSERT INTO subscribtion.publisher (company_name,royalty,user_id) VALUES (?,?,?)";
+    private static final String SET_PUBLISHER = "INSERT INTO subscribtion.publisher (company_name,royalty) VALUES (?,?)";////
+    private static final String SET_PUB_PRESENTER = "INSERT INTO subscribtion.pub_presenter (publisher_id,user_id) VALUES (?,?)";////
     private static final String GET_USER_INTERESTS = "SELECT s_name FROM subscribtion.interest JOIN subscribtion.subjects ON subscribtion.interest.subjects_id = subscribtion.subjects.id WHERE user_id = ?";
-    private static final String GET_PUBLISHER_ID = "SELECT publisher_id FROM subscribtion.publisher WHERE user_id=?";
-    private static final String SET_JOURNAL = "INSERT INTO subscribtion.journal (name,price,publisher_id) VALUES (?,?,?)";
-    private static final String GET_JOURNAL_ID = "SELECT id FROM subscribtion.journal WHERE name=?";
-    private static final String SET_JOURNAL_RELEASE = "INSERT INTO subscribtion.specific_journal (number,journal_id) VALUES (?,?)";
-    private static final String GET_TITLE_NAME = "SELECT name FROM subscribtion.journal WHERE id=?";
+    private static final String GET_PUBLISHER_ID = "SELECT publisher_id FROM subscribtion.publisher JOIN subscribtion.pub_presenter USING (publisher_id)  WHERE user_id=?";////
+    private static final String GET_PUB_ID_BY_NAME = "SELECT publisher_id FROM subscribtion.publisher WHERE company_name=?";
+    private static final String GET_PUBLISHER_NAME = "SELECT company_name FROM subscribtion.publisher WHERE publisher_id=?";
+    private static final String GET_SUBJECTS = "SELECT s_name FROM subscribtion.subjects";
+    private static final String GET_JOURNAL_SUBJECT = "SELECT name,s_name FROM subscribtion.journal \n" +
+            "JOIN subscribtion.subjects_has_journal \n" +
+            "ON (journal.id = subjects_has_journal.journal_id) \n" +
+            "JOIN (SELECT id, s_name FROM subscribtion.subjects) AS subjects\n" +
+            "ON (subjects_has_journal.subjects_id=subjects.id)";
+    private static final String SET_BALANCE = "UPDATE subscribtion.user SET balance = ? WHERE (id = ?)";
 
 
     @Override
@@ -383,20 +390,55 @@ public class SQLUserDAO implements UserDAO {
     }
 
     @Override
-    public boolean addPublisherInfo(String pubInfo, String login, int pubRoyalty) throws DAOException {
+    public int getPublisherID(String pubName) throws DAOException {
+        ConnectionPool connectionPool = ConnectionPool.getInstance();
+        PreparedStatement preparedStatement = null;
+        Connection connection = null;
+        ResultSet resultSet;
+        int index = 1;
+        int pubId = 0;
+        try {
+            connection = connectionPool.takeConnection();
+            preparedStatement = connection.prepareStatement(GET_PUB_ID_BY_NAME);
+            preparedStatement.setString(index, pubName);
+            resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                pubId = resultSet.getInt(SQLCharacteristic.PUBLISHER_ID_STR);
+            }
+        } catch (ConnectionPoolException e) {
+            throw new DAOException(e);
+        } catch (SQLException e) {
+            throw new DAOException(e);
+        } finally {
+            try {
+                preparedStatement.close();
+            } catch (SQLException e) {
+                throw new DAOException(e);
+            }
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                throw new DAOException(e);
+            }
+        }
+        return pubId;
+    }
+
+    @Override
+    public boolean addPublisherInfo(String pubInfo/*, String login*/, int pubRoyalty) throws DAOException {
         ConnectionPool connectionPool = ConnectionPool.getInstance();
         PreparedStatement preparedStatement = null;
         Connection connection = null;
         int pubInfoIndex = 1;
         int pubRoyaltyIndex = 2;
-        int userIdIndex = 3;
+        //int userIdIndex = 3;
         boolean result;
         try {
             connection = connectionPool.takeConnection();
             preparedStatement = connection.prepareStatement(SET_PUBLISHER);
             preparedStatement.setString(pubInfoIndex, pubInfo);
             preparedStatement.setInt(pubRoyaltyIndex, pubRoyalty);
-            preparedStatement.setInt(userIdIndex, getUserID(login));
+            //preparedStatement.setInt(userIdIndex, getUserID(login));
             preparedStatement.executeUpdate();
             result = true;
         } catch (ConnectionPoolException e) {
@@ -419,20 +461,24 @@ public class SQLUserDAO implements UserDAO {
     }
 
     @Override
-    public boolean addJournal(int pubId, String titleName, int titlePrice, int releaseNumber) throws DAOException {
+    public String getPublisherName(String userName) throws DAOException {
+        return null;
+    }
+
+    @Override
+    public boolean setPublisherPresenter(int pubId, int userId) throws DAOException {
         ConnectionPool connectionPool = ConnectionPool.getInstance();
         PreparedStatement preparedStatement = null;
         Connection connection = null;
-        int nameIndex = 1;
-        int priceIndex = 2;
-        int pubIdIndex = 3;
+        int pubIdIndex = 1;
+        int userIdIndex = 2;
         boolean result;
         try {
             connection = connectionPool.takeConnection();
-            preparedStatement = connection.prepareStatement(SET_JOURNAL);
-            preparedStatement.setString(nameIndex, titleName);
-            preparedStatement.setInt(priceIndex, titlePrice);
+            preparedStatement = connection.prepareStatement(SET_PUB_PRESENTER);
             preparedStatement.setInt(pubIdIndex, pubId);
+            preparedStatement.setInt(userIdIndex, userId);
+            //preparedStatement.setInt(userIdIndex, getUserID(login));
             preparedStatement.executeUpdate();
             result = true;
         } catch (ConnectionPoolException e) {
@@ -455,20 +501,20 @@ public class SQLUserDAO implements UserDAO {
     }
 
     @Override
-    public int getTitleID(String titleName) throws DAOException {
+    public String getPublisherName(int pubId) throws DAOException {
         ConnectionPool connectionPool = ConnectionPool.getInstance();
         PreparedStatement preparedStatement = null;
         Connection connection = null;
         ResultSet resultSet;
         int index = 1;
-        int journalId = 0;
+        String pubName = null;
         try {
             connection = connectionPool.takeConnection();
-            preparedStatement = connection.prepareStatement(GET_JOURNAL_ID);
-            preparedStatement.setString(index, titleName);
+            preparedStatement = connection.prepareStatement(GET_PUBLISHER_NAME);
+            preparedStatement.setInt(index, pubId);
             resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
-                journalId = resultSet.getInt(SQLCharacteristic.JOURNAL_ID);
+                pubName = resultSet.getString(SQLCharacteristic.PUBLISHER_NAME);
             }
         } catch (ConnectionPoolException e) {
             throw new DAOException(e);
@@ -486,22 +532,97 @@ public class SQLUserDAO implements UserDAO {
                 throw new DAOException(e);
             }
         }
-        return journalId;
+        return pubName;
     }
 
     @Override
-    public boolean addJournalRelease(int releaseNumber, int titleId) throws DAOException {
+    public ArrayList<String> getSubjects() throws DAOException {
         ConnectionPool connectionPool = ConnectionPool.getInstance();
         PreparedStatement preparedStatement = null;
         Connection connection = null;
-        int releaseIndex = 1;
-        int titleIndex = 2;
+        ResultSet resultSet;
+        int index = 1;
+        ArrayList<String> subjectList = new ArrayList<>();
+        String subjectName;
+        try {
+            connection = connectionPool.takeConnection();
+            preparedStatement = connection.prepareStatement(GET_SUBJECTS);
+            resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                subjectName = resultSet.getString(SQLCharacteristic.SUBJECT_NAME);
+                subjectList.add(subjectName);
+            }
+        } catch (ConnectionPoolException e) {
+            throw new DAOException(e);
+        } catch (SQLException e) {
+            throw new DAOException(e);
+        } finally {
+            try {
+                preparedStatement.close();
+            } catch (SQLException e) {
+                throw new DAOException(e);
+            }
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                throw new DAOException(e);
+            }
+        }
+        return subjectList;
+    }
+
+    @Override
+    public HashSet<String> getJournalSetBySubject(String subject) throws DAOException {
+        ConnectionPool connectionPool = ConnectionPool.getInstance();
+        PreparedStatement preparedStatement = null;
+        Connection connection = null;
+        ResultSet resultSet;
+        HashSet<String> journals = new HashSet<>();
+        String subjectName;
+        String journalName;
+        try {
+            connection = connectionPool.takeConnection();
+            preparedStatement = connection.prepareStatement(GET_JOURNAL_SUBJECT);
+            resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                journalName = resultSet.getString(SQLCharacteristic.NAME);
+                subjectName = resultSet.getString(SQLCharacteristic.SUBJECT_NAME);
+                if (subject.equals(subjectName)) {
+                    journals.add(journalName);
+                }
+            }
+        } catch (ConnectionPoolException e) {
+            throw new DAOException(e);
+        } catch (SQLException e) {
+            throw new DAOException(e);
+        } finally {
+            try {
+                preparedStatement.close();
+            } catch (SQLException e) {
+                throw new DAOException(e);
+            }
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                throw new DAOException(e);
+            }
+        }
+        return journals;
+    }
+
+    @Override
+    public boolean setBalance(int value, int userId) throws DAOException {
+        ConnectionPool connectionPool = ConnectionPool.getInstance();
+        PreparedStatement preparedStatement = null;
+        Connection connection = null;
+        int valueIndex = 1;
+        int userIdIndex = 2;
         boolean result;
         try {
             connection = connectionPool.takeConnection();
-            preparedStatement = connection.prepareStatement(SET_JOURNAL_RELEASE);
-            preparedStatement.setInt(releaseIndex, releaseNumber);
-            preparedStatement.setInt(titleIndex, titleId);
+            preparedStatement = connection.prepareStatement(SET_BALANCE);
+            preparedStatement.setInt(valueIndex, value);
+            preparedStatement.setInt(userIdIndex, userId);
             preparedStatement.executeUpdate();
             result = true;
         } catch (ConnectionPoolException e) {
@@ -521,40 +642,5 @@ public class SQLUserDAO implements UserDAO {
             }
         }
         return result;
-    }
-
-    @Override
-    public String getTitleName(int titleId) throws DAOException {
-        ConnectionPool connectionPool = ConnectionPool.getInstance();
-        PreparedStatement preparedStatement = null;
-        Connection connection = null;
-        ResultSet resultSet;
-        int index = 1;
-        String titleName = null;
-        try {
-            connection = connectionPool.takeConnection();
-            preparedStatement = connection.prepareStatement(GET_JOURNAL_ID);
-            preparedStatement.setInt(index, titleId);
-            resultSet = preparedStatement.executeQuery();
-            while (resultSet.next()) {
-                titleName = resultSet.getString(SQLCharacteristic.TITLE_NAME);
-            }
-        } catch (ConnectionPoolException e) {
-            throw new DAOException(e);
-        } catch (SQLException e) {
-            throw new DAOException(e);
-        } finally {
-            try {
-                preparedStatement.close();
-            } catch (SQLException e) {
-                throw new DAOException(e);
-            }
-            try {
-                connection.close();
-            } catch (SQLException e) {
-                throw new DAOException(e);
-            }
-        }
-        return titleName;
     }
 }

@@ -19,7 +19,12 @@ public final class FrontCommand {
     public static final String GO_TO_BECOME_PUBLISHER_PAGE = "goToBecomePublisherPage";
     public static final String GO_TO_CHANGE_USER_STATUS_PAGE = "goToChangeUserStatusPage";
     public static final String CHANGE_USER_STATUS_PAGE = "changeUserStatusPage";
-    public static final String GO_TO_DOWNLOAD_JOURNAL_FILES = "goToDownloadJournalFiles";
+    public static final String GO_TO_DOWNLOAD_JOURNAL_FILES = "goToDownloadJournalFilesPage";
     public static final String GO_TO_ADD_PUBLISHER_INFO = "goToAddPublisherInfoPage";
     public static final String DOWNLOAD_JOURNAL_FILES = "downloadJournalFilesPage";
+    public static final String JOURNAL_PAGE = "journalPage";
+    public static final String SUBSCRIBE_PAGE = "subscribePage";
+    public static final String GO_TO_JOURNAL_PAGE = "goToJournalPage";
+    public static final String GO_TO_SUBSCRIBE_PAGE = "goToSubscribePage";
+
 }

@@ -9,9 +9,9 @@ import javax.servlet.http.HttpSession;
 
 import com.tc.webapp.controller.Command;
 import com.tc.webapp.controller.FrontCommand;
-import com.tc.webapp.entity.Person;
-import com.tc.webapp.entity.User;
-import com.tc.webapp.entity.SQLCharacteristic;
+import com.tc.webapp.entity.bean.Person;
+import com.tc.webapp.entity.bean.User;
+import com.tc.webapp.entity.constant.SQLCharacteristic;
 import com.tc.webapp.service.ServiceException;
 import com.tc.webapp.service.ServiceFactory;
 import com.tc.webapp.service.UserService;

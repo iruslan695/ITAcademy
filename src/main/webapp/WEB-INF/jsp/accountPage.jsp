@@ -42,7 +42,7 @@
 </c:if>
 
 <c:if test="${sessionScope.user.role =='publisher'}" var="isPublisher">
-    <h2><a href="Controller?command=goToDownloadJournalFiles">Download journal files</a></h2>
+    <h2><a href="Controller?command=goToDownloadJournalFilesPage">Download journal files</a></h2>
 </c:if>
 </body>
 </html>

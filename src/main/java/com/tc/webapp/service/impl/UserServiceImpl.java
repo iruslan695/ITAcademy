@@ -2,9 +2,10 @@ package com.tc.webapp.service.impl;
 
 import com.tc.webapp.dao.DAOException;
 import com.tc.webapp.dao.DAOFactory;
+import com.tc.webapp.dao.JournalDAO;
 import com.tc.webapp.dao.UserDAO;
-import com.tc.webapp.entity.Person;
-import com.tc.webapp.entity.User;
+import com.tc.webapp.entity.bean.Person;
+import com.tc.webapp.entity.bean.User;
 import com.tc.webapp.service.ServiceException;
 import com.tc.webapp.service.UserService;
 
@@ -67,13 +68,22 @@ public class UserServiceImpl implements UserService {
         return result;
     }
 
-    @Override
+    @Override ////
     public boolean changeUserStatus(String login, String status, String pubName, int pubRoyalty) throws ServiceException {
         DAOFactory daoFactory = DAOFactory.getInstance();
         UserDAO userDAO = daoFactory.getUserDAO();
         boolean result;
         try {
-            result = userDAO.changeUserStatus(login, status) && userDAO.addPublisherInfo(pubName, login, pubRoyalty);
+            int pubId = userDAO.getPublisherID(pubName);
+            if (pubId == 0) {
+                result = userDAO.changeUserStatus(login, status) && userDAO.addPublisherInfo(pubName/*, login*/, pubRoyalty);
+                int userId = userDAO.getUserID(login);
+                result = result && userDAO.setPublisherPresenter(pubId, userId);
+            } else {
+                int userId = userDAO.getUserID(login);
+                result = userDAO.changeUserStatus(login, status) && userDAO.setPublisherPresenter(pubId, userId);
+            }
+
         } catch (DAOException e) {
             throw new ServiceException(e);
         }
@@ -81,8 +91,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public boolean addJournal(String pubLogin, String titleName, int titlePrice, int releaseNumber, String fileUrl) throws ServiceException {
+    public boolean addJournal(String pubLogin, String titleName, int titlePrice, int releaseNumber) throws ServiceException {
         DAOFactory daoFactory = DAOFactory.getInstance();
+        JournalDAO journalDAO = daoFactory.getPublisherDAO();
         UserDAO userDAO = daoFactory.getUserDAO();
         boolean result;
         try {
@@ -90,24 +101,38 @@ public class UserServiceImpl implements UserService {
             int userId = userDAO.getUserID(pubLogin);
             System.out.println(userId);
             int pubId = userDAO.getPublisherID(userId);
-            System.out.println("pub id " + pubId);
-            int journalId = userDAO.getTitleID(titleName);
-            System.out.println("journal id " + journalId);
-            String titleFormDB = userDAO.getTitleName(journalId);
+            int journalId = journalDAO.getTitleID(titleName);
+            System.out.println(journalId);
             if (journalId == 0) {
-                result = userDAO.addJournal(pubId, titleName, titlePrice, releaseNumber);
-                result = result && userDAO.addJournalRelease(releaseNumber, journalId);
+                result = journalDAO.addJournal(pubId, titleName, titlePrice, releaseNumber);
+                int newId = journalDAO.getTitleID(titleName);
+                result = result && journalDAO.addJournalRelease(releaseNumber, newId);
             } else {
-                if (titleFormDB.equals(titleName)) {
-                    result = userDAO.addJournalRelease(releaseNumber, journalId);
-                } else {
-                    result = userDAO.addJournal(pubId, titleName, titlePrice, releaseNumber);
-                    result = result && userDAO.addJournalRelease(releaseNumber, journalId);
-                }
+                result = journalDAO.addJournalRelease(releaseNumber, journalId);
             }
+        } catch (DAOException e) {
+            throw new ServiceException(e.getMessage(), e);
+        }
+        return result;
+    }
+
+    @Override
+    public String getPublisherName(String login) throws ServiceException {
+        DAOFactory factory = DAOFactory.getInstance();
+        UserDAO userDAO = factory.getUserDAO();
+        int userId;
+        int pubId;
+        String pubName;
+        try {
+            userId = userDAO.getUserID(login);
+            System.out.println("user id " + userId);
+            pubId = userDAO.getPublisherID(userId);
+            System.out.println("pubId " + pubId);
+            pubName = userDAO.getPublisherName(pubId);
+            System.out.println("pubName " + pubName);
         } catch (DAOException e) {
             throw new ServiceException(e);
         }
-        return result;
+        return pubName;
     }
 }

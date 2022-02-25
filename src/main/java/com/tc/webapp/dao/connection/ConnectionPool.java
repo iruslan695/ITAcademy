@@ -107,12 +107,6 @@ public final class ConnectionPool {
 
     public void closeConnection(Connection con, Statement st, ResultSet rs) throws ConnectionPoolException {
         try {
-            con.close();
-        } catch (SQLException e) {
-            throw new ConnectionPoolException("Connection isn't returned", e);
-        }
-
-        try {
             rs.close();
         } catch (SQLException e) {
             throw new ConnectionPoolException("ResultSet isn't returned", e);
@@ -123,6 +117,14 @@ public final class ConnectionPool {
         } catch (SQLException e) {
             throw new ConnectionPoolException("Statement isn't returned", e);
         }
+
+        try {
+            con.close();
+        } catch (SQLException e) {
+            throw new ConnectionPoolException("Connection isn't returned", e);
+        }
+
+
     }
 
     public void closeConnection(Connection con, Statement st) throws ConnectionPoolException {

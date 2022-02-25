@@ -34,6 +34,10 @@ public final class CommandProvider {
         commands.put(FrontCommand.GO_TO_DOWNLOAD_JOURNAL_FILES, new GoToDownloadJournalFilesPageCommand());
         commands.put(FrontCommand.GO_TO_ADD_PUBLISHER_INFO, new GoToAddPublisherInfoPageCommand());
         commands.put(FrontCommand.DOWNLOAD_JOURNAL_FILES, new DownloadJournalFilesPageCommand());
+        commands.put(FrontCommand.JOURNAL_PAGE, new JournalPageCommand());
+        commands.put(FrontCommand.GO_TO_JOURNAL_PAGE, new GoToJournalPageCommand());
+        commands.put(FrontCommand.GO_TO_SUBSCRIBE_PAGE, new GoToSubscribePageCommand());
+        commands.put(FrontCommand.SUBSCRIBE_PAGE, new SubscribePageCommand());
     }
 
     public Command getCommand(String commandName) {

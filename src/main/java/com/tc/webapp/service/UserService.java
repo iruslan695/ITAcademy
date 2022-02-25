@@ -1,7 +1,7 @@
 package com.tc.webapp.service;
 
-import com.tc.webapp.entity.Person;
-import com.tc.webapp.entity.User;
+import com.tc.webapp.entity.bean.Person;
+import com.tc.webapp.entity.bean.User;
 
 public interface UserService {
 
@@ -17,6 +17,7 @@ public interface UserService {
 
     boolean changeUserStatus(String login, String status, String pubName, int pubRoyalty) throws ServiceException;
 
-    boolean addJournal(String pubLogin, String titleName, int titlePrice, int releaseNumber, String fileUrl) throws ServiceException;
+    boolean addJournal(String pubLogin, String titleName, int titlePrice, int releaseNumberS) throws ServiceException;
 
+    String getPublisherName(String login) throws ServiceException;
 }

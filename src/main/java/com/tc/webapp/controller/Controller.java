@@ -3,17 +3,22 @@ package com.tc.webapp.controller;
 import com.tc.webapp.dao.connection.ConnectionPool;
 import com.tc.webapp.dao.connection.ConnectionPoolException;
 
+import java.io.File;
 import java.io.IOException;
 
 import javax.servlet.ServletException;
+import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+@MultipartConfig
 public class Controller extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private final CommandProvider provider = new CommandProvider();
     public static final String COMMAND = "command";
+    //public static String UPLOAD_DIRECTORY = "journals";
+    //public String uploadPath = getServletContext().getRealPath("") + File.separator + UPLOAD_DIRECTORY;
 
     public Controller() {
         super();

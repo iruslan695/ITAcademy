@@ -7,6 +7,10 @@
 <title>BookPage</title>
 </head>
 <body>
-
+<c:forEach items="${requestScope.subjectMap}" var="entry">
+    <p>
+        <a href="${entry.value}">${entry.key}</a>
+    </p>
+</c:forEach>
 </body>
 </html>

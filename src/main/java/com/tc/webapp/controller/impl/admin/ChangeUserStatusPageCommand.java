@@ -1,8 +1,8 @@
 package com.tc.webapp.controller.impl.admin;
 
 import com.tc.webapp.controller.Command;
-import com.tc.webapp.entity.ControllerConstant;
-import com.tc.webapp.entity.SQLCharacteristic;
+import com.tc.webapp.entity.constant.ControllerConstant;
+import com.tc.webapp.entity.constant.SQLCharacteristic;
 import com.tc.webapp.service.ServiceException;
 import com.tc.webapp.service.ServiceFactory;
 import com.tc.webapp.service.UserService;

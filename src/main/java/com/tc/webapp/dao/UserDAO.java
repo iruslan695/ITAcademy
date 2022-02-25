@@ -1,8 +1,11 @@
 package com.tc.webapp.dao;
 
 
-import com.tc.webapp.entity.Person;
-import com.tc.webapp.entity.User;
+import com.tc.webapp.entity.bean.Person;
+import com.tc.webapp.entity.bean.User;
+
+import java.util.ArrayList;
+import java.util.HashSet;
 
 public interface UserDAO {
 
@@ -24,13 +27,19 @@ public interface UserDAO {
 
     int getPublisherID(int userId) throws DAOException;
 
-    boolean addPublisherInfo(String pubInfo, String login, int pubRoyalty) throws DAOException;
+    int getPublisherID(String pubName) throws DAOException;
 
-    boolean addJournal(int pubId, String titleName, int titlePrice, int releaseNumber) throws DAOException;
+    boolean addPublisherInfo(String pubInfo/*, String login*/, int pubRoyalty) throws DAOException;
 
-    int getTitleID(String titleName) throws DAOException;
+    String getPublisherName(String userName) throws DAOException;
 
-    boolean addJournalRelease(int releaseNumber, int titleId) throws DAOException;
+    boolean setPublisherPresenter(int pubId, int userId) throws DAOException;
 
-    String getTitleName(int titleId) throws DAOException;
+    String getPublisherName(int pubId) throws DAOException;
+
+    ArrayList<String> getSubjects() throws DAOException;
+
+    HashSet<String> getJournalSetBySubject(String subject) throws DAOException;
+
+    boolean setBalance(int value, int userId) throws DAOException;
 }
